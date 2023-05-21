@@ -15,11 +15,14 @@ CaesarLooper {
 	var <>punchInInputLevel=1.0, <>punchOutInputLevel=0.0, <>pisil=true, <>posil=true;
 	var <pitch=0.0, <pitchLFOSpeed=0.0, <pitchLFODepth=0.0;
 
-	*new { arg inputBus, outputBus, maxDelay=30, target;
-		^super.newCopyArgs ( maxDelay, target ).init( inputBus, outputBus );
+	*new { arg inputBus, outputBus, maxDelay=30, target, numInputChannels=2;
+		^super.newCopyArgs ( maxDelay, target ).init( inputBus, outputBus, numInputChannels);
 	}
 
-	init { arg in, out;
+	init { arg in, out, numInputChannels;
+
+        numInputChannels = numInputChannels.clip(1,2);
+
 		all.add(this);
 		if (target.isNil) {
 			server = Server.default;
@@ -60,7 +63,7 @@ CaesarLooper {
 
 			phasorSynth = Synth('caesarphasor', ['buf', buf, 'phasorBus', phasorBus, 'pitchInertia', pitchInertia], phasorGroup);
 
-			inputSynth = Synth('caesarinput', ['inBus', globalInBus, 'preAmpBus', preAmpBus, 'globalOutBus', globalOutBus,
+			inputSynth = Synth("caesarinput%".format(numInputChannels).asSymbol, ['inBus', globalInBus, 'preAmpBus', preAmpBus, 'globalOutBus', globalOutBus,
 				'feedbackBus', fxBus, 'readBus', readBus, 'masterFeedback', masterFeedback], looperGroup);
 
 			passthroughSynth = Synth('caesarpassthrough', ['in', readBus, 'out', fxBus], inputSynth, 'addAfter');
@@ -525,12 +528,13 @@ CaesarLooper {
 		all = IdentitySet.new;
 
 		ServerBoot.add({
+            (1..2).do{|numChannelsIn|
 			// synth for initial panning, stereoization and feedback mixing
-			SynthDef('caesarinput', {arg inBus=0, preAmpBus=0, globalOutBus=0, feedbackBus, readBus, freezeOn=0, inputLevel=1.0,
+			SynthDef("caesarinput%".format(numChannelsIn).asSymbol, {arg inBus=0, preAmpBus=0, globalOutBus=0, feedbackBus, readBus, freezeOn=0, inputLevel=1.0,
 				pr_inputLevel=1.0, dryLevel=1.0, masterFeedback=0.8, pr_feedback=1.0, monoize=0.0, initialPan=0.0;
 
 				var feedbackIn = SelectX.ar(Lag.kr(freezeOn, 0.05), [InFeedback.ar(feedbackBus, 2), InFeedback.ar(readBus, 2)]);
-				var inputStereo = In.ar(inBus, 2);
+				var inputStereo = if(numChannelsIn == 1, {In.ar(inBus, 1)!2}, {In.ar(inBus, 2)});
 				var inputMono = Mix(inputStereo);
 				var pannedMono = Pan2.ar(inputMono, initialPan);
 				var sig = (inputStereo * (1 - monoize)) + (pannedMono * monoize);
@@ -538,6 +542,7 @@ CaesarLooper {
 				Out.ar( globalOutBus, sig * dryLevel ); // dry signal
 				Out.ar( preAmpBus, ( sig * inputLevel * pr_inputLevel ) + (feedbackIn * masterFeedback * pr_feedback) );
 			}).add;
+            };
 
 			// sends notification when rate approaches 0
 			SynthDef('caesarphasor', {arg buf, phasorBus=101, rate=1, pitchInertia=1, t_getPhase=0, resetPos=0, t_trigFromResetPos=1, delay=2;

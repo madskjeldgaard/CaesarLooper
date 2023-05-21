@@ -28,6 +28,9 @@ A server group. If nil the default group of the default server is used.
 
 returns:: A new CaesarLooper instance
 
+ARGUMENT::numInputChannels
+Number of input channels. Can be either 1 or 2.
+
 
 INSTANCEMETHODS::
 

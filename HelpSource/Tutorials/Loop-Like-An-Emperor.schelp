@@ -23,7 +23,7 @@ In order to use CaesarLooper, you need to have IBufWr by Pierre Alexandre Trembl
 
 https://github.com/tremblap/IBufWr
 
-You also will need a stereo sound source to feed it. Throughout the tutorial, I will be using the first two inputs from my audio interface which is the default.
+You also will need a mono or stereo sound source to feed it. Throughout the tutorial, I will be using the first two inputs from my audio interface which is the default.
 
 To really have fun with a looper - especially if you play an intrument that occupies both of your hands - you will want to map a couple of your favorite functions to a midi controller. There are other tutorials that cover this so I won't bother with it here. I'll just use a Mic plugged into a mixer that feeds the first two channels of my audio interface.
 
@@ -389,8 +389,3 @@ This means you can setup slaved loops to always their length in a specific rhyth
 I guess, one could explore the possibilities this creates for several years.
 
 How about you this, and when you come back, I might add a section on creating nested loops with the addRead method.
-
-
-
-
-
